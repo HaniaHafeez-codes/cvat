@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Annotation counts</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2933; }
+    h1 { font-size: 20px; }
+    #status { margin: 16px 0; }
+    #status.error { color: #b42318; }
+    .row { display: flex; align-items: center; margin: 3px 0; font-size: 13px; }
+    .label { flex: 0 0 160px; padding-right: 8px; text-align: right; }
+    .bar { height: 16px; background: #2f6fed; }
+    .count { padding-left: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Annotations per class</h1>
+  <div id="status">Loading...</div>
+  <div id="chart"></div>
+  <script>
+    const taskId = __TASK_ID__;
+    const statusBox = document.getElementById("status");
+    const chart = document.getElementById("chart");
+
+    function showMessage(text, isError) {
+      statusBox.textContent = text;
+      statusBox.className = isError ? "error" : "";
+      chart.replaceChildren();
+    }
+
+    function showError(text) {
+      showMessage(text + " ", true);
+      const retry = document.createElement("button");
+      retry.textContent = "Retry";
+      retry.addEventListener("click", load);
+      statusBox.append(retry);
+    }
+
+    function renderChart(counts) {
+      const max = Math.max(...counts.map((item) => item.count));
+      statusBox.textContent = `Task ${taskId}: ${counts.length} classes`;
+      statusBox.className = "";
+      chart.replaceChildren(
+        ...counts.map(({ label, count }) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          const name = document.createElement("div");
+          name.className = "label";
+          name.textContent = label;
+          const bar = document.createElement("div");
+          bar.className = "bar";
+          bar.style.width = `${(count / max) * 400}px`;
+          const value = document.createElement("div");
+          value.className = "count";
+          value.textContent = count;
+          row.append(name, bar, value);
+          return row;
+        }),
+      );
+    }
+
+    async function load() {
+      showMessage("Loading...", false);
+      try {
+        const response = await fetch(`/api/test/tasks/${taskId}/class-counts`);
+        if (!response.ok) {
+          showError(`Request failed (HTTP ${response.status}).`);
+          return;
+        }
+        const data = await response.json();
+        if (data.counts.length === 0) {
+          showMessage("No annotations in this task yet.", false);
+          return;
+        }
+        renderChart(data.counts);
+      } catch (error) {
+        showError("Could not reach the server.");
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
