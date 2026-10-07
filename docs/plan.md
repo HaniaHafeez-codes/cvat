@@ -50,3 +50,25 @@ Items 8-10 (WebSocket live updates, reconnect, decision record) unless
 
 items 1-7 finish early. Will list what I did not reach in Definition of Done.
 
+
+
+
+
+
+
+
+
+\## Change at 16:40: chart page is served by Django, not by cvat-ui
+
+docker-compose.dev.yml builds cvat\_server from my source but does not build
+
+cvat\_ui. A React page would need the UI image rebuilt after every change, or a
+
+full local Node setup. I estimate 15-25 minutes per change (not measured), too
+
+slow for the time left. Rejected: page inside cvat-ui. Taken: a self-contained
+
+page served by the new test app at /api/test/tasks/<id>/chart. Cost: the page
+
+is not part of the CVAT menu or React UI.
+
