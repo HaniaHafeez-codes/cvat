@@ -1,0 +1,7 @@
+Check of item 1 (task 1, 1386 images)
+Endpoint: GET /api/test/tasks/1/class-counts -> person = 3683
+Same count from the COCO file (instances_task.json), the CVAT way: every polygon part is one shape, a crowd annotation counts as 1:
+  $t = Get-Content instances_task.json -Raw | ConvertFrom-Json
+  $personId = ($t.categories | Where-Object name -eq 'person').id
+  (($t.annotations | Where-Object { $_.category_id -eq $personId } | ForEach-Object { if ($_.iscrowd -eq 1) { 1 } else { @($_.segmentation).Count } }) | Measure-Object -Sum).Sum
+Result: 3683
